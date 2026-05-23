@@ -417,6 +417,15 @@
               <option value="auto" data-i18n="format_auto"></option>
             </select>
           </div>
+          <div class="setting-group">
+            <label for="margin-select" data-i18n="setting_margin_label"></label>
+            <select id="margin-select">
+              <option value="0"  data-i18n="margin_0"></option>
+              <option value="5"  data-i18n="margin_5" selected></option>
+              <option value="10" data-i18n="margin_10"></option>
+              <option value="15" data-i18n="margin_15"></option>
+            </select>
+          </div>
         </div>
 
         <div class="sheets-section">
@@ -541,6 +550,8 @@ const TRANSLATIONS = {
     stat_output: 'Výsledný formát', stat_output_sub_a4: 'na šířku, 2× A5', stat_output_sub_a3: 'na šířku, 2× A4', stat_output_sub_auto: 'automaticky',
     setting_scale: 'Přizpůsobit každou stránku (škálování)',
     setting_format_label: 'Výstupní formát:',
+    setting_margin_label: 'Okraj:',
+    margin_0: 'bez okraje', margin_5: '5 mm', margin_10: '10 mm', margin_15: '15 mm',
     format_a4: 'A5 stránky → A4 booklet', format_a3: 'A4 stránky → A3 booklet', format_auto: 'Automaticky dle stránek',
     sheets_title: 'Pořadí listů pro tisk',
     sheet_lbl: 'List', sheet_front: '↑ přední:', sheet_back: '↓ zadní:', sheet_blank: 'bílá',
@@ -600,6 +611,8 @@ const TRANSLATIONS = {
     stat_output: 'Output format', stat_output_sub_a4: 'landscape, 2× A5', stat_output_sub_a3: 'landscape, 2× A4', stat_output_sub_auto: 'auto-detected',
     setting_scale: 'Scale each page to fit (recommended)',
     setting_format_label: 'Output format:',
+    setting_margin_label: 'Margin:',
+    margin_0: 'no margin', margin_5: '5 mm', margin_10: '10 mm', margin_15: '15 mm',
     format_a4: 'A5 pages → A4 booklet', format_a3: 'A4 pages → A3 booklet', format_auto: 'Auto-detect from pages',
     sheets_title: 'Sheet print order',
     sheet_lbl: 'Sheet', sheet_front: '↑ front:', sheet_back: '↓ back:', sheet_blank: 'blank',
@@ -738,8 +751,9 @@ function updateStats() {
   document.getElementById('stat-pages-sub').textContent = padded > numPages ? t('padded_msg')(padded) : t('exact_msg');
   document.getElementById('stat-sheets').textContent = padded / 4;
   const fmt = document.getElementById('format-select').value;
-  const subMap = { A4: t('stat_output_sub_a4'), A3: t('stat_output_sub_a3'), auto: t('stat_output_sub_auto') };
-  document.getElementById('stat-output-val').textContent = fmt === 'auto' ? 'Auto' : fmt;
+  const valMap  = { A4: 'A4', A3: 'A3', auto: 'Auto' };
+  const subMap  = { A4: t('stat_output_sub_a4'), A3: t('stat_output_sub_a3'), auto: t('stat_output_sub_auto') };
+  document.getElementById('stat-output-val').textContent = valMap[fmt] || 'A4';
   document.getElementById('stat-output-sub-el').textContent = subMap[fmt] || t('stat_output_sub_a4');
   buildSheetsGrid(numPages, padded);
 }
@@ -791,8 +805,38 @@ async function generate() {
     const n = srcPages.length;
     const padded = Math.ceil(n / 4) * 4;
     const fitScale = document.getElementById('fit-check').checked;
-    const { width: targetW, height: targetH } = srcPages[0].getSize();
-    const sheetW = targetW * 2, sheetH = targetH;
+    // Okraj v bodech (1mm = 2.835 pt)
+    const marginMM = parseFloat(document.getElementById('margin-select').value) || 0;
+    const margin = marginMM * 2.835;
+
+    // Výstupní formát — určuje velikost JEDNOHO slotu (= jedna stránka na archu)
+    const fmt = document.getElementById('format-select').value;
+    const PT_PER_MM = 2.835;
+    let slotW, slotH;
+    if (fmt === 'A4') {
+      // Slot = A5 (148 × 210 mm)
+      slotW = 148 * PT_PER_MM;
+      slotH = 210 * PT_PER_MM;
+    } else if (fmt === 'A3') {
+      // Slot = A4 (210 × 297 mm)
+      slotW = 210 * PT_PER_MM;
+      slotH = 297 * PT_PER_MM;
+    } else {
+      // Auto — slot = rozměry první stránky PDF
+      const { width: pw0, height: ph0 } = srcPages[0].getSize();
+      slotW = pw0;
+      slotH = ph0;
+    }
+
+    // Výstupní arch = 2 sloty vedle sebe (na šířku)
+    const targetW = slotW;   // šířka jednoho slotu = polovina archu
+    const targetH = slotH;   // výška archu
+    const sheetW  = targetW * 2;
+    const sheetH  = targetH;
+
+    // Použitelná plocha po odečtení okrajů
+    const usableW = targetW - 2 * margin;
+    const usableH = targetH - 2 * margin;
 
     const outDoc = await PDFLib.PDFDocument.create();
     const sheets = bookletOrder(padded);
@@ -810,10 +854,11 @@ async function generate() {
           // getSize() vrací cropbox — pro správné centrování použijeme
           // skutečné rozměry embedded objektu (mediabox)
           const pw = emb.width, ph = emb.height;
-          let scale = fitScale ? Math.min(targetW / pw, targetH / ph) : 1;
+          let scale = fitScale ? Math.min(usableW / pw, usableH / ph) : 1;
           const sw = pw * scale, sh = ph * scale;
-          const ox = side * targetW + (targetW - sw) / 2;
-          const oy = (sheetH - sh) / 2;
+          // Centrovat v použitelném slotu s okrajem
+          const ox = side * targetW + margin + (usableW - sw) / 2;
+          const oy = margin + (usableH - sh) / 2;
           sheetPage.drawPage(emb, { x: ox, y: oy, width: sw, height: sh });
         }
         done++;
