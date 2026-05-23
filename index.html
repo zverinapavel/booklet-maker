@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Booklet Maker — PDF sešit pro tisk | Bohemia Falcon Studio</title>
+
+<!-- SEO -->
+<meta name="description" content="Zdarma online nástroj pro vytvoření PDF booklet sešitu pro oboustranný tisk a vazbu sponkami (saddle stitch). Funguje přímo v prohlížeči, soubory nikam neodesílá.">
+<meta name="keywords" content="booklet maker, PDF booklet, sešit tisk, saddle stitch, brožura tisk, booklet PDF online, oboustranný tisk, vazba sponkami, PDF nástroj zdarma">
+<meta name="author" content="Pavel Zvěřina, Bohemia Falcon Studio">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://www.bohemiafalcon.cz/tools/booklet-maker/">
+
+<!-- Open Graph (sdílení na sociálních sítích) -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Booklet Maker — PDF sešit pro tisk zdarma">
+<meta property="og:description" content="Sestavte PDF booklet pro oboustranný tisk a vazbu sponkami přímo v prohlížeči. Žádný upload, žádná registrace, zdarma.">
+<meta property="og:url" content="https://www.bohemiafalcon.cz/tools/booklet-maker/">
+<meta property="og:locale" content="cs_CZ">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:site_name" content="Bohemia Falcon Studio">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Booklet Maker — PDF sešit pro tisk zdarma">
+<meta name="twitter:description" content="Sestavte PDF booklet pro oboustranný tisk a vazbu sponkami přímo v prohlížeči.">
+
+<!-- Structured Data (Google) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Booklet Maker",
+  "description": "Online nástroj pro vytvoření PDF booklet sešitu pro oboustranný tisk a vazbu sponkami. Zpracování probíhá lokálně v prohlížeči.",
+  "url": "https://www.bohemiafalcon.cz/tools/booklet-maker/",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Web",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "CZK"
+  },
+  "author": {
+    "@type": "Person",
+    "name": "Pavel Zvěřina",
+    "worksFor": {
+      "@type": "Organization",
+      "name": "Bohemia Falcon Studio",
+      "url": "https://www.bohemiafalcon.cz"
+    }
+  },
+  "inLanguage": ["cs", "en"],
+  "isAccessibleForFree": true,
+  "featureList": [
+    "PDF booklet sestavení",
+    "Libovolný počet stránek",
+    "Automatické doplnění prázdných stránek",
+    "Škálování stránek různých velikostí",
+    "Zpracování lokálně v prohlížeči bez uploadu",
+    "Podpora češtiny a angličtiny"
+  ]
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<style>
+  :root {
+    --bg:#f5f3ee; --surface:#fff; --surface2:#f0ede6; --text:#1a1814;
+    --text-muted:#6b6760; --text-hint:#a09d97; --accent:#2d5a3d;
+    --accent-light:#e8f0eb; --accent-mid:#4a8a5f; --border:#dedad3;
+    --border-strong:#c4bfb6; --danger:#c0392b; --danger-bg:#fdf0ee;
+    --success:#2d6a3f; --success-bg:#eaf4ec;
+    --radius:10px; --radius-lg:16px;
+    --font:'Georgia','Times New Roman',serif;
+    --font-ui:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-ui);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;}
+
+  /* HEADER */
+  header{background:var(--accent);color:#fff;padding:0;}
+  .header-inner{max-width:860px;margin:0 auto;padding:2.5rem 2rem 2rem;display:flex;align-items:flex-end;gap:2rem;}
+  .header-icon{width:64px;height:64px;background:rgba(255,255,255,.15);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .header-icon svg{width:34px;height:34px;fill:none;stroke:#fff;stroke-width:1.5;}
+  h1{font-family:var(--font);font-size:2rem;font-weight:normal;letter-spacing:-.01em;line-height:1.2;color:#fff;}
+  .header-sub{font-size:.95rem;color:rgba(255,255,255,.75);margin-top:4px;}
+  .header-wave{height:32px;background:var(--accent);clip-path:ellipse(55% 100% at 50% 0%);margin-top:-1px;}
+
+  /* LANG SWITCHER */
+  .lang-switcher{display:flex;gap:4px;margin-left:auto;align-self:flex-start;padding-top:.5rem;}
+  .lang-btn{padding:5px 12px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid rgba(255,255,255,.35);background:transparent;color:rgba(255,255,255,.7);transition:all .15s;letter-spacing:.02em;}
+  .lang-btn.active{background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.7);}
+  .lang-btn:hover:not(.active){background:rgba(255,255,255,.1);color:#fff;}
+
+  main{max-width:860px;margin:0 auto;padding:2.5rem 2rem 4rem;}
+
+  /* HOW IT WORKS */
+  .how-it-works{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:2.5rem;}
+  .step-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;}
+  .step-num{width:28px;height:28px;background:var(--accent);color:#fff;border-radius:50%;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;margin-bottom:10px;}
+  .step-card h3{font-size:14px;font-weight:600;margin-bottom:4px;color:var(--text);}
+  .step-card p{font-size:13px;color:var(--text-muted);line-height:1.5;}
+
+  /* ILLUSTRATION */
+  .illustration-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem 1rem .5rem;margin-bottom:2rem;overflow:hidden;}
+
+  /* TOOL CARD */
+  .tool-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.04);overflow:hidden;}
+  .tool-card-header{background:var(--surface2);border-bottom:1px solid var(--border);padding:1rem 1.5rem;font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:8px;}
+  .tool-card-body{padding:2rem 1.5rem;}
+
+  /* DROP ZONE */
+  #drop-zone{border:2px dashed var(--border-strong);border-radius:var(--radius);padding:3.5rem 2rem;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;background:var(--surface2);}
+  #drop-zone:hover,#drop-zone.drag-over{border-color:var(--accent-mid);background:var(--accent-light);}
+  #drop-zone svg{width:48px;height:48px;stroke:var(--text-hint);margin-bottom:14px;}
+  #drop-zone h2{font-size:17px;font-weight:600;margin-bottom:6px;}
+  #drop-zone p{font-size:14px;color:var(--text-muted);}
+  .drop-btn{display:inline-block;margin-top:16px;padding:9px 20px;background:var(--accent);color:#fff;border-radius:var(--radius);font-size:14px;font-weight:500;cursor:pointer;border:none;transition:background .15s;}
+  .drop-btn:hover{background:var(--accent-mid);}
+
+  /* FILE INFO */
+  #info-panel{display:none;}
+  .file-info-bar{background:var(--accent-light);border:1px solid #b8d4be;border-radius:var(--radius);padding:1rem 1.25rem;display:flex;align-items:center;gap:12px;margin-bottom:1.75rem;flex-wrap:wrap;}
+  .file-icon{width:40px;height:40px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .file-icon svg{width:20px;height:20px;stroke:#fff;fill:none;}
+  .file-meta{flex:1;min-width:0;}
+  .file-meta strong{font-size:14px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .file-meta span{font-size:12px;color:var(--text-muted);}
+  .change-link{font-size:13px;color:var(--accent-mid);cursor:pointer;white-space:nowrap;text-decoration:underline;}
+
+  /* STATS */
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.75rem;}
+  .stat{background:var(--surface2);border-radius:var(--radius);padding:.85rem 1rem;}
+  .stat-label{font-size:11px;color:var(--text-hint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;}
+  .stat-value{font-size:20px;font-weight:600;color:var(--text);line-height:1.2;}
+  .stat-sub{font-size:11px;color:var(--text-muted);margin-top:2px;}
+
+  /* SETTINGS */
+  .settings-row{display:flex;flex-wrap:wrap;gap:1.25rem;margin-bottom:1.75rem;align-items:center;}
+  .setting-group{display:flex;align-items:center;gap:8px;}
+  .setting-group label{font-size:13px;color:var(--text-muted);}
+  .setting-group select,  .setting-group input[type=checkbox]{accent-color:var(--accent);cursor:pointer;}
+  .setting-group select{font-size:13px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);}
+
+  /* SHEETS PREVIEW */
+  .sheets-section{margin-bottom:1.75rem;}
+  .sheets-section h3{font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+  .sheets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;max-height:220px;overflow-y:auto;padding-right:4px;}
+  .sheet-item{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:12px;}
+  .sheet-item-title{font-weight:600;color:var(--text-muted);margin-bottom:5px;}
+  .sheet-row{display:flex;justify-content:space-between;color:var(--text-muted);}
+  .sheet-row span:first-child{color:var(--text-hint);font-size:11px;}
+  .sheet-row strong{color:var(--text);font-weight:500;font-size:12px;}
+  .blank-page{color:var(--text-hint)!important;font-style:italic;}
+
+  /* GEN BUTTON */
+  #gen-btn{display:flex;align-items:center;gap:10px;padding:13px 28px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;transition:background .15s,transform .1s;box-shadow:0 2px 8px rgba(45,90,61,.3);}
+  #gen-btn:hover{background:var(--accent-mid);}
+  #gen-btn:active{transform:scale(.98);}
+  #gen-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+  #gen-btn svg{width:20px;height:20px;stroke:#fff;fill:none;}
+
+  /* PROGRESS */
+  #progress-panel{display:none;margin-top:1.5rem;}
+  .progress-bar-wrap{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:8px;}
+  #prog-bar{height:100%;background:var(--accent);width:0%;transition:width .2s;border-radius:3px;}
+  #prog-label{font-size:13px;color:var(--text-muted);}
+
+  /* RESULT */
+  #result-panel{display:none;margin-top:1.5rem;}
+  .result-box{background:var(--success-bg);border:1px solid #a8d5b0;border-radius:var(--radius);padding:1.25rem;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .result-check{width:40px;height:40px;background:var(--success);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .result-check svg{width:20px;height:20px;stroke:#fff;fill:none;}
+  .result-info{flex:1;}
+  .result-info strong{font-size:14px;display:block;}
+  .result-info span{font-size:12px;color:var(--text-muted);}
+  #dl-btn{display:flex;align-items:center;gap:8px;padding:10px 18px;background:var(--success);color:#fff;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;}
+  #dl-btn:hover{background:#245532;}
+  #dl-btn svg{width:16px;height:16px;stroke:#fff;fill:none;}
+  .print-tip{margin-top:1rem;padding:.9rem 1rem;background:#fffbf0;border:1px solid #e8d89a;border-radius:var(--radius);font-size:13px;color:#7a6820;line-height:1.6;}
+  .print-tip strong{color:#5a4c10;}
+
+  /* ERROR */
+  #error-panel{display:none;margin-top:1rem;padding:.9rem 1rem;background:var(--danger-bg);border:1px solid #e8b4ae;border-radius:var(--radius);font-size:13px;color:var(--danger);}
+
+  /* FAQ */
+  .faq{margin-top:3rem;}
+  .faq h2{font-family:var(--font);font-size:1.4rem;font-weight:normal;color:var(--text);margin-bottom:1.25rem;}
+  details{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);margin-bottom:8px;overflow:hidden;}
+  summary{padding:1rem 1.25rem;font-size:14px;font-weight:600;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;color:var(--text);}
+  summary::-webkit-details-marker{display:none;}
+  summary::after{content:'+';font-size:18px;color:var(--text-hint);font-weight:300;}
+  details[open] summary::after{content:'−';}
+  details[open] summary{border-bottom:1px solid var(--border);}
+  .faq-body{padding:1rem 1.25rem;font-size:14px;color:var(--text-muted);line-height:1.7;}
+  .faq-body p+p{margin-top:.6rem;}
+
+  /* PRINT GUIDE */
+  .print-guide{margin-top:3rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+  .print-guide-header{background:var(--surface2);border-bottom:1px solid var(--border);padding:1rem 1.5rem;font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;}
+  .print-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));padding:1.5rem;gap:1rem;}
+  .print-step{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;}
+  .print-step-icon{width:56px;height:56px;background:var(--accent-light);border-radius:12px;display:flex;align-items:center;justify-content:center;}
+  .print-step-icon svg{width:28px;height:28px;stroke:var(--accent);fill:none;stroke-width:1.5;}
+  .print-step strong{font-size:13px;color:var(--text);}
+  .print-step p{font-size:12px;color:var(--text-muted);line-height:1.5;}
+  .print-step-arrow{display:flex;align-items:center;justify-content:center;color:var(--text-hint);font-size:20px;padding-top:18px;}
+
+  footer{text-align:center;padding:2rem;font-size:12px;color:var(--text-hint);border-top:1px solid var(--border);}
+
+  @media(max-width:600px){
+    .print-step-arrow{display:none;}
+    h1{font-size:1.5rem;}
+    .header-icon{display:none;}
+    .lang-switcher{padding-top:0;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-icon">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 19V6a2 2 0 0 1 2-2h14"/>
+        <path d="M4 19a2 2 0 0 0 2 2h14V8H6a2 2 0 0 0-2 2"/>
+        <line x1="9" y1="12" x2="15" y2="12"/>
+        <line x1="9" y1="16" x2="13" y2="16"/>
+      </svg>
+    </div>
+    <div>
+      <h1>Booklet Maker</h1>
+      <p class="header-sub" data-i18n="header_sub"></p>
+    </div>
+    <div class="lang-switcher">
+      <button class="lang-btn active" onclick="setLang('cs')">CZ</button>
+      <button class="lang-btn" onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+  <div class="header-wave"></div>
+</header>
+
+<main>
+
+  <div class="how-it-works">
+    <div class="step-card"><div class="step-num">1</div><h3 data-i18n="step1_title"></h3><p data-i18n="step1_text"></p></div>
+    <div class="step-card"><div class="step-num">2</div><h3 data-i18n="step2_title"></h3><p data-i18n="step2_text"></p></div>
+    <div class="step-card"><div class="step-num">3</div><h3 data-i18n="step3_title"></h3><p data-i18n="step3_text"></p></div>
+    <div class="step-card"><div class="step-num">4</div><h3 data-i18n="step4_title"></h3><p data-i18n="step4_text"></p></div>
+  </div>
+
+  <!-- ILLUSTRATION -->
+  <div class="illustration-wrap">
+    <svg width="100%" viewBox="0 0 860 220" role="img" xmlns="http://www.w3.org/2000/svg">
+      <title data-i18n="svg_title"></title>
+      <desc data-i18n="svg_desc"></desc>
+      <!-- stránka 4 -->
+      <rect x="28" y="44" width="68" height="92" rx="5" fill="#e8f0eb" stroke="#4a8a5f" stroke-width="1"/>
+      <line x1="38" y1="62" x2="86" y2="62" stroke="#4a8a5f" stroke-width="1" opacity=".4"/>
+      <line x1="38" y1="72" x2="86" y2="72" stroke="#4a8a5f" stroke-width="1" opacity=".4"/>
+      <line x1="38" y1="82" x2="75" y2="82" stroke="#4a8a5f" stroke-width="1" opacity=".4"/>
+      <text x="82" y="42" font-family="Georgia,serif" font-size="11" fill="#4a8a5f" text-anchor="middle">4</text>
+      <!-- stránka 3 -->
+      <rect x="38" y="36" width="68" height="92" rx="5" fill="#d6e8db" stroke="#4a8a5f" stroke-width="1"/>
+      <line x1="48" y1="54" x2="96" y2="54" stroke="#4a8a5f" stroke-width="1" opacity=".4"/>
+      <line x1="48" y1="64" x2="96" y2="64" stroke="#4a8a5f" stroke-width="1" opacity=".4"/>
+      <line x1="48" y1="74" x2="85" y2="74" stroke="#4a8a5f" stroke-width="1" opacity=".4"/>
+      <text x="92" y="34" font-family="Georgia,serif" font-size="11" fill="#4a8a5f" text-anchor="middle">3</text>
+      <!-- stránka 2 -->
+      <rect x="48" y="28" width="68" height="92" rx="5" fill="#c4e0cb" stroke="#2d5a3d" stroke-width="1"/>
+      <line x1="58" y1="46" x2="106" y2="46" stroke="#2d5a3d" stroke-width="1" opacity=".4"/>
+      <line x1="58" y1="56" x2="106" y2="56" stroke="#2d5a3d" stroke-width="1" opacity=".4"/>
+      <line x1="58" y1="66" x2="95" y2="66" stroke="#2d5a3d" stroke-width="1" opacity=".4"/>
+      <text x="102" y="26" font-family="Georgia,serif" font-size="11" fill="#2d5a3d" text-anchor="middle">2</text>
+      <!-- stránka 1 -->
+      <rect x="58" y="20" width="68" height="92" rx="5" fill="#b0d4bb" stroke="#2d5a3d" stroke-width="1.5"/>
+      <line x1="68" y1="38" x2="116" y2="38" stroke="#2d5a3d" stroke-width="1" opacity=".5"/>
+      <line x1="68" y1="48" x2="116" y2="48" stroke="#2d5a3d" stroke-width="1" opacity=".5"/>
+      <line x1="68" y1="58" x2="105" y2="58" stroke="#2d5a3d" stroke-width="1" opacity=".5"/>
+      <line x1="68" y1="68" x2="116" y2="68" stroke="#2d5a3d" stroke-width="1" opacity=".3"/>
+      <text x="112" y="18" font-family="Georgia,serif" font-size="11" fill="#2d5a3d" font-weight="bold" text-anchor="middle">1</text>
+      <text class="svg-lbl1" x="80" y="156" font-family="-apple-system,sans-serif" font-size="12" fill="#2d5a3d" text-anchor="middle" font-weight="600" data-i18n-svg="svg_lbl_pages"></text>
+      <text x="80" y="171" font-family="-apple-system,sans-serif" font-size="11" fill="#6b6760" text-anchor="middle">1, 2, 3, 4…</text>
+      <!-- šipka 1 -->
+      <path d="M148 90 C158 90 162 90 172 90" stroke="#a09d97" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <polygon points="172,86 180,90 172,94" fill="#a09d97"/>
+      <text x="164" y="82" font-family="-apple-system,sans-serif" font-size="10" fill="#a09d97" text-anchor="middle" data-i18n-svg="svg_arr1"></text>
+      <!-- booklet pořadí -->
+      <rect x="192" y="22" width="52" height="72" rx="4" fill="#fff8e8" stroke="#b07d15" stroke-width="1"/>
+      <text x="218" y="42" font-family="Georgia,serif" font-size="18" fill="#b07d15" text-anchor="middle" opacity=".4">4</text>
+      <rect x="246" y="22" width="52" height="72" rx="4" fill="#fff0cc" stroke="#b07d15" stroke-width="1.5"/>
+      <text x="272" y="42" font-family="Georgia,serif" font-size="18" fill="#b07d15" text-anchor="middle">1</text>
+      <line x1="246" y1="22" x2="246" y2="94" stroke="#b07d15" stroke-width=".8" stroke-dasharray="3 2" opacity=".5"/>
+      <text x="246" y="105" font-family="-apple-system,sans-serif" font-size="9" fill="#a09d97" text-anchor="middle" data-i18n-svg="svg_front"></text>
+      <rect x="192" y="116" width="52" height="72" rx="4" fill="#fde8e8" stroke="#8b3a3a" stroke-width="1.5"/>
+      <text x="218" y="136" font-family="Georgia,serif" font-size="18" fill="#8b3a3a" text-anchor="middle">2</text>
+      <rect x="246" y="116" width="52" height="72" rx="4" fill="#faeaea" stroke="#8b3a3a" stroke-width="1"/>
+      <text x="272" y="136" font-family="Georgia,serif" font-size="18" fill="#8b3a3a" text-anchor="middle">3</text>
+      <line x1="246" y1="116" x2="246" y2="188" stroke="#8b3a3a" stroke-width=".8" stroke-dasharray="3 2" opacity=".5"/>
+      <text x="246" y="199" font-family="-apple-system,sans-serif" font-size="9" fill="#a09d97" text-anchor="middle" data-i18n-svg="svg_back"></text>
+      <text x="246" y="156" font-family="-apple-system,sans-serif" font-size="12" fill="#1a1814" text-anchor="middle" font-weight="600" data-i18n-svg="svg_lbl_order"></text>
+      <text x="246" y="210" font-family="-apple-system,sans-serif" font-size="11" fill="#6b6760" text-anchor="middle" data-i18n-svg="svg_lbl_order_sub"></text>
+      <!-- šipka 2 -->
+      <path d="M312 90 C322 90 326 90 336 90" stroke="#a09d97" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <polygon points="336,86 344,90 336,94" fill="#a09d97"/>
+      <text x="328" y="82" font-family="-apple-system,sans-serif" font-size="10" fill="#a09d97" text-anchor="middle" data-i18n-svg="svg_arr2"></text>
+      <!-- A4 arch -->
+      <rect x="356" y="30" width="148" height="104" rx="6" fill="#f5f3ee" stroke="#2d5a3d" stroke-width="1.5"/>
+      <line x1="430" y1="30" x2="430" y2="134" stroke="#2d5a3d" stroke-width="1" stroke-dasharray="4 3" opacity=".6"/>
+      <rect x="362" y="36" width="62" height="92" rx="3" fill="#fff8e8" stroke="#b07d15" stroke-width=".8"/>
+      <text x="393" y="65" font-family="Georgia,serif" font-size="22" fill="#b07d15" text-anchor="middle" opacity=".5">4</text>
+      <line x1="370" y1="82" x2="416" y2="82" stroke="#b07d15" stroke-width=".7" opacity=".3"/>
+      <line x1="370" y1="90" x2="416" y2="90" stroke="#b07d15" stroke-width=".7" opacity=".3"/>
+      <rect x="436" y="36" width="62" height="92" rx="3" fill="#fff0cc" stroke="#b07d15" stroke-width="1.2"/>
+      <text x="467" y="65" font-family="Georgia,serif" font-size="22" fill="#b07d15" text-anchor="middle">1</text>
+      <line x1="444" y1="82" x2="490" y2="82" stroke="#b07d15" stroke-width=".7" opacity=".4"/>
+      <line x1="444" y1="90" x2="490" y2="90" stroke="#b07d15" stroke-width=".7" opacity=".4"/>
+      <rect x="356" y="144" width="30" height="16" rx="4" fill="#2d5a3d"/>
+      <text x="371" y="156" font-family="-apple-system,sans-serif" font-size="10" fill="#fff" text-anchor="middle" font-weight="600">A4</text>
+      <text x="430" y="174" font-family="-apple-system,sans-serif" font-size="12" fill="#1a1814" text-anchor="middle" font-weight="600" data-i18n-svg="svg_lbl_sheet"></text>
+      <text x="430" y="189" font-family="-apple-system,sans-serif" font-size="11" fill="#6b6760" text-anchor="middle" data-i18n-svg="svg_lbl_sheet_sub"></text>
+      <!-- šipka 3 -->
+      <path d="M516 90 C526 90 530 90 540 90" stroke="#a09d97" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <polygon points="540,86 548,90 540,94" fill="#a09d97"/>
+      <text x="532" y="82" font-family="-apple-system,sans-serif" font-size="10" fill="#a09d97" text-anchor="middle" data-i18n-svg="svg_arr3"></text>
+      <!-- sešit -->
+      <rect x="558" y="34" width="8" height="100" rx="2" fill="#2d5a3d"/>
+      <rect x="561" y="36" width="72" height="96" rx="0" fill="#f0ede6" stroke="#c4bfb6" stroke-width=".5"/>
+      <rect x="561" y="38" width="72" height="92" rx="0" fill="#f5f3ee" stroke="#c4bfb6" stroke-width=".5"/>
+      <rect x="561" y="40" width="72" height="88" rx="0" fill="#fff" stroke="#dedad3" stroke-width=".8"/>
+      <text x="597" y="68" font-family="Georgia,serif" font-size="22" fill="#2d5a3d" text-anchor="middle" font-weight="bold">1</text>
+      <line x1="570" y1="82" x2="624" y2="82" stroke="#2d5a3d" stroke-width=".8" opacity=".35"/>
+      <line x1="570" y1="90" x2="624" y2="90" stroke="#2d5a3d" stroke-width=".8" opacity=".35"/>
+      <line x1="570" y1="98" x2="617" y2="98" stroke="#2d5a3d" stroke-width=".8" opacity=".25"/>
+      <rect x="556" y="58" width="6" height="8" rx="1" fill="#888" opacity=".7"/>
+      <rect x="556" y="76" width="6" height="8" rx="1" fill="#888" opacity=".7"/>
+      <path d="M566 128 L558 134 L630 134 L638 128" stroke="#c4bfb6" stroke-width=".8" fill="#e8e4dc"/>
+      <text x="598" y="156" font-family="-apple-system,sans-serif" font-size="12" fill="#1a1814" text-anchor="middle" font-weight="600" data-i18n-svg="svg_lbl_booklet"></text>
+      <text x="598" y="171" font-family="-apple-system,sans-serif" font-size="11" fill="#6b6760" text-anchor="middle" data-i18n-svg="svg_lbl_booklet_sub"></text>
+      <!-- šipka 4 -->
+      <path d="M648 90 C658 90 662 90 672 90" stroke="#2d5a3d" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <polygon points="672,86 680,90 672,94" fill="#2d5a3d"/>
+      <!-- finální brožura -->
+      <rect x="686" y="26" width="60" height="82" rx="5" fill="#2d5a3d"/>
+      <rect x="688" y="28" width="56" height="78" rx="4" fill="#b0d4bb"/>
+      <rect x="698" y="38" width="36" height="4" rx="2" fill="#2d5a3d" opacity=".5"/>
+      <rect x="698" y="47" width="28" height="3" rx="1.5" fill="#2d5a3d" opacity=".35"/>
+      <rect x="698" y="55" width="36" height="3" rx="1.5" fill="#2d5a3d" opacity=".25"/>
+      <rect x="698" y="63" width="30" height="3" rx="1.5" fill="#2d5a3d" opacity=".2"/>
+      <circle cx="730" cy="92" r="10" fill="#2d5a3d"/>
+      <path d="M724 92 L728 96 L736 88" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="716" y="132" font-family="-apple-system,sans-serif" font-size="12" fill="#2d5a3d" text-anchor="middle" font-weight="700" data-i18n-svg="svg_lbl_done"></text>
+      <text x="716" y="147" font-family="-apple-system,sans-serif" font-size="11" fill="#6b6760" text-anchor="middle" data-i18n-svg="svg_lbl_done_sub"></text>
+    </svg>
+  </div>
+
+  <!-- TOOL -->
+  <div class="tool-card">
+    <div class="tool-card-header">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span data-i18n="privacy_note"></span>
+    </div>
+    <div class="tool-card-body">
+
+      <div id="drop-zone"
+        onclick="document.getElementById('file-input').click()"
+        ondragover="onDragOver(event)"
+        ondragleave="onDragLeave(event)"
+        ondrop="onDrop(event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="12" y1="18" x2="12" y2="12"/>
+          <polyline points="9 15 12 12 15 15"/>
+        </svg>
+        <h2 data-i18n="drop_title"></h2>
+        <p data-i18n="drop_or"></p>
+        <button class="drop-btn" type="button" data-i18n="drop_btn"></button>
+        <p style="margin-top:12px;font-size:12px;color:var(--text-hint);" data-i18n="drop_hint"></p>
+        <input type="file" id="file-input" accept="application/pdf" style="display:none" onchange="loadFile(this.files[0])">
+      </div>
+
+      <div id="info-panel">
+        <div class="file-info-bar">
+          <div class="file-icon">
+            <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+          <div class="file-meta">
+            <strong id="fname">—</strong>
+            <span id="fdetail">—</span>
+          </div>
+          <span class="change-link" onclick="reset()" data-i18n="change_file"></span>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat"><div class="stat-label" data-i18n="stat_pages"></div><div class="stat-value" id="stat-pages">—</div><div class="stat-sub" id="stat-pages-sub"></div></div>
+          <div class="stat"><div class="stat-label" data-i18n="stat_size"></div><div class="stat-value" id="stat-size">—</div><div class="stat-sub" data-i18n="stat_size_sub"></div></div>
+          <div class="stat"><div class="stat-label" data-i18n="stat_sheets"></div><div class="stat-value" id="stat-sheets">—</div><div class="stat-sub" data-i18n="stat_sheets_sub"></div></div>
+          <div class="stat"><div class="stat-label" data-i18n="stat_output"></div><div class="stat-value" id="stat-output-val">A4</div><div class="stat-sub" id="stat-output-sub-el" data-i18n="stat_output_sub_a4"></div></div>
+        </div>
+
+        <div class="settings-row">
+          <div class="setting-group">
+            <input type="checkbox" id="fit-check" checked>
+            <label for="fit-check" data-i18n="setting_scale"></label>
+          </div>
+          <div class="setting-group">
+            <label data-i18n="setting_format_label"></label>
+            <select id="format-select" onchange="updateStats()">
+              <option value="A4" data-i18n="format_a4"></option>
+              <option value="A3" data-i18n="format_a3"></option>
+              <option value="auto" data-i18n="format_auto"></option>
+            </select>
+          </div>
+        </div>
+
+        <div class="sheets-section">
+          <h3 data-i18n="sheets_title"></h3>
+          <div class="sheets-grid" id="sheets-grid"></div>
+        </div>
+
+        <button id="gen-btn" onclick="generate()">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="9" y1="13" x2="15" y2="13"/>
+            <line x1="12" y1="10" x2="12" y2="16"/>
+          </svg>
+          <span data-i18n="gen_btn"></span>
+        </button>
+
+        <div id="progress-panel">
+          <p id="prog-label"></p>
+          <div class="progress-bar-wrap"><div id="prog-bar"></div></div>
+        </div>
+
+        <div id="result-panel">
+          <div class="result-box">
+            <div class="result-check">
+              <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <div class="result-info">
+              <strong id="result-name">booklet.pdf</strong>
+              <span id="result-detail">—</span>
+            </div>
+            <button id="dl-btn" onclick="downloadResult()">
+              <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span data-i18n="dl_btn"></span>
+            </button>
+          </div>
+          <div class="print-tip" id="print-tip-text"></div>
+        </div>
+
+        <div id="error-panel"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRINT GUIDE -->
+  <div class="print-guide">
+    <div class="print-guide-header" data-i18n="guide_title"></div>
+    <div class="print-steps">
+      <div class="print-step">
+        <div class="print-step-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></div>
+        <strong data-i18n="guide1_title"></strong><p data-i18n="guide1_text"></p>
+      </div>
+      <div class="print-step-arrow">→</div>
+      <div class="print-step">
+        <div class="print-step-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><path d="M5 6l7-4 7 4"/><path d="M5 12l7-4 7 4"/><path d="M5 18l7-4 7 4"/></svg></div>
+        <strong data-i18n="guide2_title"></strong><p data-i18n="guide2_text"></p>
+      </div>
+      <div class="print-step-arrow">→</div>
+      <div class="print-step">
+        <div class="print-step-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+        <strong data-i18n="guide3_title"></strong><p data-i18n="guide3_text"></p>
+      </div>
+      <div class="print-step-arrow">→</div>
+      <div class="print-step">
+        <div class="print-step-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V6a2 2 0 0 1 2-2h14"/><path d="M4 19a2 2 0 0 0 2 2h14V8H6a2 2 0 0 0-2 2"/></svg></div>
+        <strong data-i18n="guide4_title"></strong><p data-i18n="guide4_text"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq">
+    <h2 data-i18n="faq_title"></h2>
+    <details><summary data-i18n="faq1_q"></summary><div class="faq-body" data-i18n-html="faq1_a"></div></details>
+    <details><summary data-i18n="faq2_q"></summary><div class="faq-body" data-i18n-html="faq2_a"></div></details>
+    <details><summary data-i18n="faq3_q"></summary><div class="faq-body" data-i18n-html="faq3_a"></div></details>
+    <details><summary data-i18n="faq4_q"></summary><div class="faq-body" data-i18n-html="faq4_a"></div></details>
+    <details><summary data-i18n="faq5_q"></summary><div class="faq-body" data-i18n-html="faq5_a"></div></details>
+    <details><summary data-i18n="faq6_q"></summary><div class="faq-body" data-i18n-html="faq6_a"></div></details>
+    <details><summary data-i18n="faq7_q"></summary><div class="faq-body" data-i18n-html="faq7_a"></div></details>
+  </div>
+
+</main>
+
+<footer>
+  <div style="margin-bottom:6px;">
+    <span data-i18n="footer"></span> &nbsp;·&nbsp; <a href="https://pdf-lib.js.org" style="color:inherit;">pdf-lib</a>
+  </div>
+  <div>
+    &copy; 2026 <a href="https://www.bohemiafalcon.cz" style="color:inherit;">Pavel Zvěřina &amp; Bohemia Falcon Studio</a>
+  </div>
+</footer>
+
+<script>
+const TRANSLATIONS = {
+  cs: {
+    header_sub: 'Sestavte PDF sešit pro oboustranný tisk a vazbu sponkami — přímo v prohlížeči, bez odesílání dat',
+    step1_title: 'Nahrajte PDF', step1_text: 'Přetáhněte soubor nebo klikněte pro výběr. Funguje s libovolnou velikostí stránek.',
+    step2_title: 'Sestavte booklet', step2_text: 'Utilita automaticky přeuspořádá stránky do správného pořadí pro vazbu.',
+    step3_title: 'Stáhněte a tiskněte', step3_text: 'Oboustranný tisk, přeložit uprostřed, sešít dvěma sponkami.',
+    step4_title: 'Hotový sešit', step4_text: 'Výsledek vypadá jako profesionálně vázaná brožura nebo manuál.',
+    svg_title: 'Jak funguje booklet: přeskládání stránek PDF na A4 archy pro vazbu sponkami',
+    svg_desc: 'Ilustrace ukazuje 5 kroků: původní stránky PDF, přeskládání do booklet pořadí, A4 arch, přeložení a hotový sešit.',
+    svg_lbl_pages: 'Stránky PDF', svg_arr1: 'přeskládá', svg_front: 'přední', svg_back: 'zadní',
+    svg_lbl_order: 'Booklet pořadí', svg_lbl_order_sub: '4|1 přední · 2|3 zadní',
+    svg_arr2: 'tisk', svg_lbl_sheet: 'Arch na šířku', svg_lbl_sheet_sub: 'oboustranný tisk',
+    svg_arr3: 'přeložit', svg_lbl_booklet: 'Hotový sešit', svg_lbl_booklet_sub: 'sponky uprostřed',
+    svg_lbl_done: 'Brožura', svg_lbl_done_sub: 'připravena!',
+    privacy_note: 'Vše se zpracovává lokálně ve vašem prohlížeči — soubor nikam neodesíláme',
+    drop_title: 'Přetáhněte PDF soubor sem', drop_or: 'nebo',
+    drop_btn: 'Vybrat soubor z počítače',
+    drop_hint: 'Podporuje PDF libovolné velikosti a počtu stránek',
+    change_file: 'Změnit soubor',
+    stat_pages: 'Stránek v PDF', stat_size: 'Formát stránky', stat_size_sub: 'originální rozměr',
+    stat_sheets: 'Listů A4', stat_sheets_sub: 'oboustranně',
+    stat_output: 'Výsledný formát', stat_output_sub_a4: 'na šířku, 2× A5', stat_output_sub_a3: 'na šířku, 2× A4', stat_output_sub_auto: 'automaticky',
+    setting_scale: 'Přizpůsobit každou stránku (škálování)',
+    setting_format_label: 'Výstupní formát:',
+    format_a4: 'A5 stránky → A4 booklet', format_a3: 'A4 stránky → A3 booklet', format_auto: 'Automaticky dle stránek',
+    sheets_title: 'Pořadí listů pro tisk',
+    sheet_lbl: 'List', sheet_front: '↑ přední:', sheet_back: '↓ zadní:', sheet_blank: 'bílá',
+    gen_btn: 'Sestavit booklet PDF',
+    prog_loading: 'Načítám stránky...', prog_composing: 'Skládám stránky…', prog_saving: 'Ukládám výsledný soubor...',
+    dl_btn: 'Stáhnout PDF',
+    result_detail: (sheets, kb) => `${sheets} listů A4 · ${kb} KB · připraveno k tisku`,
+    print_tip: '<strong>Jak tisknout:</strong> Otevřete v Adobe Reader nebo prohlížeči. Zvolte <strong>oboustranný tisk</strong> s otáčením podél <strong>kratší strany</strong> (flip on short edge). Po tisku složte listy dohromady a sešijte <strong>dvěma sponkami uprostřed hřbetu</strong>.',
+    guide_title: 'Postup tisku a vazby',
+    guide1_title: 'Oboustranný tisk', guide1_text: 'Zvolte „flip on short edge" — otáčení podél kratší strany, nebo tiskněte nejprve liché stránky a poté sudé v obráceném pořadí',
+    guide2_title: 'Složte listy', guide2_text: 'Všechny listy přeložte přesně napůl a vložte do sebe',
+    guide3_title: 'Sešijte sponkami', guide3_text: 'Dvě sponky uprostřed hřbetu — vazba V1 (saddle stitch)',
+    guide4_title: 'Hotový sešit!', guide4_text: 'Stránky jdou ve správném pořadí automaticky',
+    faq_title: 'Časté dotazy',
+    faq1_q: 'Co je to booklet / sešitová vazba?',
+    faq1_a: '<p>Booklet je způsob tisku, kdy se stránky přeuspořádají tak, aby po přeložení listů a sešití sponkami vznikla brožura se správným pořadím stránek.</p><p>Například pro 8stránkový sešit bude na prvním listu vepředu stránka 8 a 1, vzadu 2 a 7.</p>',
+    faq2_q: 'Jaký počet stránek PDF lze použít?',
+    faq2_a: '<p>Utilita funguje s libovolným počtem stránek. Pokud počet není násobkem 4, automaticky doplní prázdné bílé stránky na konec.</p><p>Ideálně: 4, 8, 12, 16, 20, 24 stránek… Při 10 stránkách se doplní 2 prázdné.</p>',
+    faq3_q: 'Funguje to s různými velikostmi stránek?',
+    faq3_a: '<p>Ano — pokud jsou stránky v PDF různě velké (naskenované dokumenty), utilita každou stránku individuálně přizpůsobí. Zaškrtněte možnost „Škálování".</p>',
+    faq4_q: 'Jsou moje soubory v bezpečí?',
+    faq4_a: '<p>Absolutně. Celé zpracování probíhá přímo ve vašem prohlížeči pomocí knihovny pdf-lib. Váš soubor se nikdy neposílá na žádný server.</p><p>Stránku si také můžete uložit a používat offline.</p>',
+    faq5_q: 'Jaké nastavení zvolit při tisku?',
+    faq5_a: '<p><strong>Oboustranný tisk:</strong> Ano. <strong>Otáčení:</strong> Podél kratší strany (flip on short edge). <strong>Měřítko:</strong> 100 %. <strong>Orientace:</strong> Na šířku (landscape).</p>',
+    faq6_q: 'Kolik listů A4 budu potřebovat?',
+    faq6_a: '<p>Každý list A4 = 4 stránky A5. Počet listů = počet stránek ÷ 4.</p><p>Příklady: 8 str. = 2 listy, 16 str. = 4 listy, 32 str. = 8 listů. Doporučujeme max. 20–25 listů pro sponky.</p>',
+    faq7_q: 'Nemám tiskárnu s oboustranným tiskem — jak na to?',
+    faq7_a: '<p>Žádný problém — jde to i ručně ve dvou průchodech:</p><ol style="margin:0.5rem 0 0 1.2rem;line-height:2"><li>Vytiskněte nejprve pouze <strong>liché stránky</strong> (1, 3, 5…) — to jsou přední strany listů.</li><li>Vytištěné listy znovu vložte do podavače <strong>ve stejném pořadí, ale otočeně</strong> (potištěnou stranou dolů, horní hranou dovnitř — záleží na tiskárně, vyzkoušejte na jednom listu).</li><li>Vytiskněte <strong>sudé stránky v obráceném pořadí</strong> (poslední sudá stránka první). Ve většině tiskových dialogů je volba „Obrácené pořadí" nebo „Reverse order".</li></ol><p style="margin-top:0.6rem">Tip: Před tiskem celého sešitu si vždy ověřte správné vložení papíru na jednom testovacím listu.</p>',
+    padded_msg: (n) => `doplněno na ${n}`,
+    exact_msg: 'přesný násobek 4',
+    pages_detail: (n, kb) => `${n} stránek · ${kb} KB`,
+    err_not_pdf: 'Prosím nahrajte soubor ve formátu PDF (.pdf).',
+    err_load: (msg) => `Nepodařilo se načíst PDF. Soubor může být poškozený nebo chráněný heslem. (${msg})`,
+    err_process: (msg) => `Chyba při zpracování: ${msg}`,
+    footer: 'Booklet Maker — zpracování PDF probíhá lokálně ve vašem prohlížeči, bez odesílání dat',
+  },
+  en: {
+    header_sub: 'Create a PDF booklet for duplex printing and staple binding — right in your browser, no upload needed',
+    step1_title: 'Upload PDF', step1_text: 'Drag and drop or click to select. Works with any page size.',
+    step2_title: 'Build booklet', step2_text: 'The tool automatically reorders pages into the correct binding sequence.',
+    step3_title: 'Download & print', step3_text: 'Duplex print, fold in half, staple twice in the middle.',
+    step4_title: 'Done!', step4_text: 'Your result looks like a professionally bound brochure or manual.',
+    svg_title: 'How a booklet works: reordering PDF pages onto A4 sheets for staple binding',
+    svg_desc: 'Illustration shows 5 steps: original PDF pages, reordering, A4 landscape sheet, folding and finished booklet.',
+    svg_lbl_pages: 'PDF pages', svg_arr1: 'reorder', svg_front: 'front', svg_back: 'back',
+    svg_lbl_order: 'Booklet order', svg_lbl_order_sub: '4|1 front · 2|3 back',
+    svg_arr2: 'print', svg_lbl_sheet: 'Landscape sheet', svg_lbl_sheet_sub: 'duplex print',
+    svg_arr3: 'fold', svg_lbl_booklet: 'Folded booklet', svg_lbl_booklet_sub: 'staples in spine',
+    svg_lbl_done: 'Booklet', svg_lbl_done_sub: 'ready!',
+    privacy_note: 'Everything is processed locally in your browser — your file is never uploaded anywhere',
+    drop_title: 'Drop your PDF here', drop_or: 'or',
+    drop_btn: 'Choose file from computer',
+    drop_hint: 'Supports PDFs of any page size and page count',
+    change_file: 'Change file',
+    stat_pages: 'Pages in PDF', stat_size: 'Page size', stat_size_sub: 'original dimensions',
+    stat_sheets: 'A4 sheets', stat_sheets_sub: 'duplex',
+    stat_output: 'Output format', stat_output_sub_a4: 'landscape, 2× A5', stat_output_sub_a3: 'landscape, 2× A4', stat_output_sub_auto: 'auto-detected',
+    setting_scale: 'Scale each page to fit (recommended)',
+    setting_format_label: 'Output format:',
+    format_a4: 'A5 pages → A4 booklet', format_a3: 'A4 pages → A3 booklet', format_auto: 'Auto-detect from pages',
+    sheets_title: 'Sheet print order',
+    sheet_lbl: 'Sheet', sheet_front: '↑ front:', sheet_back: '↓ back:', sheet_blank: 'blank',
+    gen_btn: 'Build booklet PDF',
+    prog_loading: 'Loading pages...', prog_composing: 'Composing sheets…', prog_saving: 'Saving output file...',
+    dl_btn: 'Download PDF',
+    result_detail: (sheets, kb) => `${sheets} A4 sheets · ${kb} KB · ready to print`,
+    print_tip: '<strong>How to print:</strong> Open in Adobe Reader or your browser. Choose <strong>duplex / two-sided printing</strong>, flip along the <strong>short edge</strong> (flip on short edge). After printing, stack the sheets, fold in half, and staple <strong>twice along the spine</strong>.',
+    guide_title: 'Printing & binding steps',
+    guide1_title: 'Duplex print', guide1_text: 'Select "flip on short edge" in your printer dialog, or print odd pages first then even pages in reverse order',
+    guide2_title: 'Stack & fold', guide2_text: 'Stack all sheets and fold exactly in half together',
+    guide3_title: 'Staple', guide3_text: 'Two staples through the spine — saddle stitch binding',
+    guide4_title: 'Finished!', guide4_text: 'Pages are automatically in the correct reading order',
+    faq_title: 'Frequently asked questions',
+    faq1_q: 'What is a booklet / saddle stitch?',
+    faq1_a: '<p>A booklet is a printing method where pages are reordered so that after folding and stapling the sheets in the middle, the result is a brochure with pages in the correct reading order.</p><p>For example, in an 8-page booklet, sheet 1 front has pages 8 and 1; the back has pages 2 and 7.</p>',
+    faq2_q: 'How many pages can the PDF have?',
+    faq2_a: '<p>Any number. If the page count is not a multiple of 4, blank white pages are added automatically at the end.</p><p>Ideal counts: 4, 8, 12, 16, 20, 24… A 10-page PDF becomes a 12-page booklet.</p>',
+    faq3_q: 'Does it work with mixed page sizes?',
+    faq3_a: '<p>Yes — if pages have different sizes (common in scanned documents), each page is individually scaled to the target format. Enable the "Scale pages" checkbox.</p>',
+    faq4_q: 'Are my files safe?',
+    faq4_a: '<p>Absolutely. All processing happens locally in your browser using the pdf-lib library. Your file is never sent to any server.</p><p>You can also save the page and use it offline.</p>',
+    faq5_q: 'What printer settings should I use?',
+    faq5_a: '<p><strong>Two-sided:</strong> Yes. <strong>Flip:</strong> Short edge (flip on short edge). <strong>Scale:</strong> 100% (actual size). <strong>Orientation:</strong> Landscape.</p>',
+    faq6_q: 'How many A4 sheets will I need?',
+    faq6_a: '<p>Each A4 sheet = 4 A5 pages. Number of sheets = page count ÷ 4.</p><p>Examples: 8 pages = 2 sheets, 16 pages = 4 sheets, 32 pages = 8 sheets. We recommend max. 20–25 sheets for staple binding.</p>',
+    faq7_q: 'I don\'t have a duplex printer — how do I print manually?',
+    faq7_a: '<p>No problem — you can do it in two passes:</p><ol style="margin:0.5rem 0 0 1.2rem;line-height:2"><li>Print <strong>odd pages only</strong> (1, 3, 5…) first — these are the front sides of each sheet.</li><li>Return the printed sheets to the paper tray <strong>in the same order, flipped over</strong> (printed side down, top edge inward — this varies by printer, test with one sheet first).</li><li>Print <strong>even pages in reverse order</strong> (last even page first). Most print dialogs have a "Reverse order" option.</li></ol><p style="margin-top:0.6rem">Tip: Always test the correct paper orientation with a single sheet before printing the whole booklet.</p>',
+    padded_msg: (n) => `padded to ${n}`,
+    exact_msg: 'exact multiple of 4',
+    pages_detail: (n, kb) => `${n} pages · ${kb} KB`,
+    err_not_pdf: 'Please upload a PDF file (.pdf).',
+    err_load: (msg) => `Could not load PDF. The file may be damaged or password-protected. (${msg})`,
+    err_process: (msg) => `Processing error: ${msg}`,
+    footer: 'Booklet Maker — PDF processing runs locally in your browser, no data is uploaded',
+  }
+};
+
+let currentLang = 'cs';
+
+function t(key) { return TRANSLATIONS[currentLang][key] || key; }
+
+function applyTranslations() {
+  document.documentElement.lang = currentLang;
+  document.title = 'Booklet Maker — ' + (currentLang === 'cs' ? 'PDF sešit pro tisk' : 'PDF booklet for printing');
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = t(key);
+    if (typeof val === 'string') el.textContent = val;
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const key = el.getAttribute('data-i18n-html');
+    const val = t(key);
+    if (typeof val === 'string') el.innerHTML = val;
+  });
+  document.querySelectorAll('[data-i18n-svg]').forEach(el => {
+    const key = el.getAttribute('data-i18n-svg');
+    const val = t(key);
+    if (typeof val === 'string') el.textContent = val;
+  });
+
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.toLowerCase() === currentLang);
+  });
+
+  document.getElementById('print-tip-text').innerHTML = t('print_tip');
+
+  if (numPages > 0) {
+    const padded = Math.ceil(numPages / 4) * 4;
+    document.getElementById('stat-pages-sub').textContent =
+      padded > numPages ? t('padded_msg')(padded) : t('exact_msg');
+    buildSheetsGrid(numPages, padded);
+  }
+  // Přepočítat popis výstupního formátu
+  updateStats();
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  applyTranslations();
+}
+
+let pdfBytes = null, resultBytes = null, fileName = '', numPages = 0;
+
+function onDragOver(e) { e.preventDefault(); document.getElementById('drop-zone').classList.add('drag-over'); }
+function onDragLeave(e) { document.getElementById('drop-zone').classList.remove('drag-over'); }
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f) loadFile(f);
+}
+
+async function loadFile(file) {
+  if (!file || file.type !== 'application/pdf') { showError(t('err_not_pdf')); return; }
+  pdfBytes = await file.arrayBuffer();
+  fileName = file.name;
+  try {
+    const doc = await PDFLib.PDFDocument.load(pdfBytes);
+    const pages = doc.getPages();
+    numPages = pages.length;
+    const { width, height } = pages[0].getSize();
+    // PDF body = 1/72 palce; detekuj imperiální prostředí dle jazyka prohlížeče
+    const useImperial = navigator.language && navigator.language.startsWith('en-US');
+    let sizeStr;
+    if (useImperial) {
+      const win = (width / 72).toFixed(2), hin = (height / 72).toFixed(2);
+      sizeStr = `${win} × ${hin} in`;
+    } else {
+      const wmm = Math.round(width / 2.835), hmm = Math.round(height / 2.835);
+      sizeStr = `${wmm} × ${hmm} mm`;
+    }
+    const padded = Math.ceil(numPages / 4) * 4;
+    const fileSizeKB = Math.round(pdfBytes.byteLength / 1024);
+
+    document.getElementById('fname').textContent = file.name;
+    document.getElementById('fdetail').textContent = t('pages_detail')(numPages, fileSizeKB);
+    document.getElementById('stat-pages').textContent = numPages;
+    document.getElementById('stat-pages-sub').textContent = padded > numPages ? t('padded_msg')(padded) : t('exact_msg');
+    document.getElementById('stat-size').textContent = sizeStr;
+    document.getElementById('stat-sheets').textContent = padded / 4;
+
+    buildSheetsGrid(numPages, padded);
+    document.getElementById('drop-zone').style.display = 'none';
+    document.getElementById('info-panel').style.display = 'block';
+    document.getElementById('result-panel').style.display = 'none';
+    document.getElementById('error-panel').style.display = 'none';
+    document.getElementById('progress-panel').style.display = 'none';
+  } catch(e) { showError(t('err_load')(e.message)); }
+}
+
+function updateStats() {
+  if (!numPages) return;
+  const padded = Math.ceil(numPages / 4) * 4;
+  document.getElementById('stat-pages-sub').textContent = padded > numPages ? t('padded_msg')(padded) : t('exact_msg');
+  document.getElementById('stat-sheets').textContent = padded / 4;
+  const fmt = document.getElementById('format-select').value;
+  const subMap = { A4: t('stat_output_sub_a4'), A3: t('stat_output_sub_a3'), auto: t('stat_output_sub_auto') };
+  document.getElementById('stat-output-val').textContent = fmt === 'auto' ? 'Auto' : fmt;
+  document.getElementById('stat-output-sub-el').textContent = subMap[fmt] || t('stat_output_sub_a4');
+  buildSheetsGrid(numPages, padded);
+}
+
+function bookletOrder(total) {
+  const sheets = [];
+  const numSheets = total / 4;
+  for (let i = 0; i < numSheets; i++) {
+    const j = i * 2;
+    sheets.push({
+      front: [total - j,     j + 1],
+      back:  [j + 2, total - j - 1]
+    });
+  }
+  return sheets;
+}
+
+function buildSheetsGrid(n, padded) {
+  const grid = document.getElementById('sheets-grid');
+  grid.innerHTML = '';
+  bookletOrder(padded).forEach((s, i) => {
+    const el = document.createElement('div');
+    el.className = 'sheet-item';
+    const lbl = (p) => p > n ? `<span class="blank-page">${t('sheet_blank')}</span>` : `<strong>${p}</strong>`;
+    el.innerHTML = `
+      <div class="sheet-item-title">${t('sheet_lbl')} ${i + 1}</div>
+      <div class="sheet-row"><span>${t('sheet_front')}</span><span>${lbl(s.front[0])} &nbsp; ${lbl(s.front[1])}</span></div>
+      <div class="sheet-row"><span>${t('sheet_back')}</span><span>${lbl(s.back[0])} &nbsp; ${lbl(s.back[1])}</span></div>`;
+    grid.appendChild(el);
+  });
+}
+
+function setProgress(pct, label) {
+  document.getElementById('prog-bar').style.width = pct + '%';
+  document.getElementById('prog-label').textContent = label;
+}
+
+async function generate() {
+  if (!pdfBytes) return;
+  document.getElementById('gen-btn').disabled = true;
+  document.getElementById('progress-panel').style.display = 'block';
+  document.getElementById('result-panel').style.display = 'none';
+  document.getElementById('error-panel').style.display = 'none';
+  setProgress(5, t('prog_loading'));
+
+  try {
+    const srcDoc = await PDFLib.PDFDocument.load(pdfBytes);
+    const srcPages = srcDoc.getPages();
+    const n = srcPages.length;
+    const padded = Math.ceil(n / 4) * 4;
+    const fitScale = document.getElementById('fit-check').checked;
+    const { width: targetW, height: targetH } = srcPages[0].getSize();
+    const sheetW = targetW * 2, sheetH = targetH;
+
+    const outDoc = await PDFLib.PDFDocument.create();
+    const sheets = bookletOrder(padded);
+    const totalOps = sheets.length * 2;
+    let done = 0;
+
+    for (const sheet of sheets) {
+      for (const pair of [sheet.front, sheet.back]) {
+        const sheetPage = outDoc.addPage([sheetW, sheetH]);
+        for (let side = 0; side < 2; side++) {
+          const pageNum = pair[side];
+          if (pageNum < 1 || pageNum > n) continue;
+          const srcPage = srcPages[pageNum - 1];
+          const [emb] = await outDoc.embedPages([srcPage]);
+          // getSize() vrací cropbox — pro správné centrování použijeme
+          // skutečné rozměry embedded objektu (mediabox)
+          const pw = emb.width, ph = emb.height;
+          let scale = fitScale ? Math.min(targetW / pw, targetH / ph) : 1;
+          const sw = pw * scale, sh = ph * scale;
+          const ox = side * targetW + (targetW - sw) / 2;
+          const oy = (sheetH - sh) / 2;
+          sheetPage.drawPage(emb, { x: ox, y: oy, width: sw, height: sh });
+        }
+        done++;
+        setProgress(10 + Math.round((done / totalOps) * 85), `${t('prog_composing')} (${done} / ${totalOps})`);
+        await new Promise(r => setTimeout(r, 0));
+      }
+    }
+
+    setProgress(98, t('prog_saving'));
+    resultBytes = await outDoc.save();
+    const kb = Math.round(resultBytes.length / 1024);
+    const outName = fileName.replace(/\.pdf$/i, '') + '-booklet.pdf';
+    document.getElementById('result-name').textContent = outName;
+    document.getElementById('result-detail').textContent = t('result_detail')(sheets.length, kb);
+    document.getElementById('progress-panel').style.display = 'none';
+    document.getElementById('result-panel').style.display = 'block';
+    setProgress(100, '');
+  } catch(e) {
+    showError(t('err_process')(e.message));
+    document.getElementById('progress-panel').style.display = 'none';
+  }
+  document.getElementById('gen-btn').disabled = false;
+}
+
+function downloadResult() {
+  if (!resultBytes) return;
+  const name = fileName.replace(/\.pdf$/i, '') + '-booklet.pdf';
+  const blob = new Blob([resultBytes], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function reset() {
+  pdfBytes = null; resultBytes = null; fileName = ''; numPages = 0;
+  document.getElementById('drop-zone').style.display = 'block';
+  document.getElementById('info-panel').style.display = 'none';
+  document.getElementById('result-panel').style.display = 'none';
+  document.getElementById('error-panel').style.display = 'none';
+  document.getElementById('progress-panel').style.display = 'none';
+  document.getElementById('file-input').value = '';
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-panel');
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'block';
+}
+
+applyTranslations();
+</script>
+</body>
+</html>
